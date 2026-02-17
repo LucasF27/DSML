@@ -20,10 +20,11 @@ def update_centroids(data, labels, k):
     return np.array([data[labels == i].mean(axis=0) for i in range(k)])
 
 # Function to generate data and iterations
-def generate_iterations(k, n_blobs_centers, seed=27, n_samples=300):
-    np.random.seed(seed)
+def generate_iterations(k, n_blobs_centers, data_seed=27, kmeans_seed=27, n_samples=300):
+    np.random.seed(data_seed)
     data, _ = make_blobs(n_samples=n_samples, centers=n_blobs_centers, cluster_std=0.6)
     
+    np.random.seed(kmeans_seed)
     centroids = data[np.random.choice(data.shape[0], k, replace=False)]
     
     # Prepare for step-by-step control
@@ -39,8 +40,9 @@ def generate_iterations(k, n_blobs_centers, seed=27, n_samples=300):
     return data, iterations
 
 # Generate initial data
-seed = 27  # Initial random seed for reproducibility
-data, iterations = generate_iterations(k, n_blobs_centers, seed=seed)
+data_seed = 27  # Initial random seed for data generation
+kmeans_seed = 27  # Initial random seed for k-means initialization
+data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
 
 # Initialize plot
 fig, ax = plt.subplots(figsize=(10, 7))
@@ -94,21 +96,21 @@ def prev_step(event):
         update_plot(current_step[0])
 
 def reset(event):
-    global data, iterations, k, n_blobs_centers, centroid_history, seed
+    global data, iterations, k, n_blobs_centers, centroid_history, data_seed, kmeans_seed
     current_step[0] = 0
     centroid_history = [[] for _ in range(k)]
-    data, iterations = generate_iterations(k, n_blobs_centers, seed=seed)
+    data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
     update_plot(current_step[0])
 
 def submit_clusters(text):
-    global k, data, iterations, centroid_history, seed
+    global k, data, iterations, centroid_history, data_seed, kmeans_seed
     try:
         new_k = int(text)
         if new_k > 0 and new_k <= len(colors):
             k = new_k
             current_step[0] = 0
             centroid_history = [[] for _ in range(k)]
-            data, iterations = generate_iterations(k, n_blobs_centers, seed=seed)
+            data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
             update_plot(current_step[0])
         else:
             print(f"Number of clusters must be between 1 and {len(colors)}")
@@ -116,31 +118,43 @@ def submit_clusters(text):
         print("Please enter a valid integer for clusters")
 
 def submit_blobs(text):
-    global data, iterations, centroid_history, n_blobs_centers, seed
+    global data, iterations, centroid_history, n_blobs_centers, data_seed, kmeans_seed
     try:
         new_n_blobs_centers = int(text)
         if new_n_blobs_centers > 0:
             n_blobs_centers = new_n_blobs_centers
             current_step[0] = 0
             centroid_history = [[] for _ in range(k)]
-            data, iterations = generate_iterations(k, n_blobs_centers, seed=seed)
+            data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
             update_plot(current_step[0])
         else:
             print("Number of blob centers must be greater than 0")
     except ValueError:
         print("Please enter a valid integer for blob centers")
 
-def submit_seed(text):
-    global data, iterations, centroid_history, seed
+def submit_data_seed(text):
+    global data, iterations, centroid_history, data_seed, kmeans_seed
     try:
-        new_seed = int(text)
+        new_data_seed = int(text)
         current_step[0] = 0
         centroid_history = [[] for _ in range(k)]
-        seed = new_seed
-        data, iterations = generate_iterations(k, n_blobs_centers, seed=seed)
+        data_seed = new_data_seed
+        data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
         update_plot(current_step[0])
     except ValueError:
-        print("Please enter a valid integer for random seed")
+        print("Please enter a valid integer for data seed")
+
+def submit_kmeans_seed(text):
+    global data, iterations, centroid_history, data_seed, kmeans_seed
+    try:
+        new_kmeans_seed = int(text)
+        current_step[0] = 0
+        centroid_history = [[] for _ in range(k)]
+        kmeans_seed = new_kmeans_seed
+        data, iterations = generate_iterations(k, n_blobs_centers, data_seed=data_seed, kmeans_seed=kmeans_seed)
+        update_plot(current_step[0])
+    except ValueError:
+        print("Please enter a valid integer for k-means seed")
 
 # Add buttons and text boxes
 axprev = plt.axes([0.2, 0.2, 0.1, 0.075])
@@ -148,7 +162,8 @@ axnext = plt.axes([0.31, 0.2, 0.1, 0.075])
 axreset = plt.axes([0.7, 0.2, 0.1, 0.075])
 axclusters = plt.axes([0.425, 0.13, 0.15, 0.05])
 axblobs = plt.axes([0.2, 0.13, 0.15, 0.05])
-axseed = plt.axes([0.7, 0.13, 0.15, 0.05])
+axdata_seed = plt.axes([0.65, 0.13, 0.15, 0.05])
+axkmeans_seed = plt.axes([0.65, 0.06, 0.15, 0.05])
 
 btn_next = Button(axnext, 'Next')
 btn_prev = Button(axprev, 'Previous')
@@ -156,14 +171,16 @@ btn_reset = Button(axreset, 'Reset')
 
 text_clusters = TextBox(axclusters, 'Clusters:', initial=str(k))
 text_blobs = TextBox(axblobs, 'Blob Centers:', initial=str(n_blobs_centers))
-text_seed = TextBox(axseed, 'Random Seed:', initial='27')
+text_data_seed = TextBox(axdata_seed, 'Data Seed:', initial='27')
+text_kmeans_seed = TextBox(axkmeans_seed, 'K-Means Seed:', initial='27')
 
 btn_next.on_clicked(next_step)
 btn_prev.on_clicked(prev_step)
 btn_reset.on_clicked(reset)
 text_clusters.on_submit(submit_clusters)
 text_blobs.on_submit(submit_blobs)
-text_seed.on_submit(submit_seed)
+text_data_seed.on_submit(submit_data_seed)
+text_kmeans_seed.on_submit(submit_kmeans_seed)
 
 # Show the initial plot
 update_plot(current_step[0])
