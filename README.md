@@ -92,6 +92,57 @@ python pca_interactive.py
 
 ---
 
+### 5. `time_series_app.py` — Forecast Playground (Streamlit app)
+
+An interactive browser-based app for teaching **time-series forecasting** on synthetic monthly temperature data (Nottingham, 2015–2024).
+
+**Models**
+| Model | Description |
+|---|---|
+| Mean | Global mean of the training set |
+| Naïve | Last observed value repeated |
+| Seasonal Naïve | Value from the same month one year prior |
+| Moving Average | Rolling mean over a configurable window |
+| Linear Regression | Lag-feature regression with sklearn |
+| Random Forest | Ensemble of lag-feature regressors |
+
+**Features**
+- Configurable train / test split
+- MAE and RMSE metrics displayed live
+- Forecast vs actual chart with confidence shading
+- Teaching notes on bias–variance and stationarity
+
+**Run:**
+```bash
+streamlit run time_series_app.py
+```
+
+---
+
+### 6. `anomaly_app.py` — Anomaly Detector Playground (Streamlit app)
+
+An interactive browser-based app for teaching **anomaly detection** in time-series data using a synthetic heart-rate sensor trace (480 minutes, 12 injected spikes).
+
+**Methods**
+| Method | Description |
+|---|---|
+| Absolute threshold | Fixed upper / lower bounds; flags any crossing |
+| Rolling z-score | Adaptive local mean ± k·σ band over a sliding window |
+
+**Features**
+- Configurable detection method, rolling window, and threshold
+- Ground-truth toggle to reveal / hide injected anomaly locations
+- Live confusion-matrix metrics: TP, FP, FN, Precision, Recall, F1
+- Z-score panel below the main chart
+- Teaching notes on the precision–recall trade-off and domain cost asymmetry
+
+**Run:**
+```bash
+streamlit run anomaly_app.py
+```
+
+---
+
 ## Requirements
 
 ```bash
